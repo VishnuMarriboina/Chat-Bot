@@ -14,9 +14,19 @@ const connBadge      = document.getElementById("connection-badge");
 const connLabel      = document.getElementById("connection-label");
 const clearBtn       = document.getElementById("clear-btn");
 const quickBtns      = document.querySelectorAll(".quick-btn");
+const themeToggle    = document.getElementById("theme-toggle");
 
 let messageCount = 0;
 let mySocketId   = null;
+
+// True while we're waiting on a reply to the last message we sent —
+// blocks a new request from going out until this one resolves.
+let awaitingResponse = false;
+
+function setAwaitingResponse(value) {
+  awaitingResponse = value;
+  sendBtn.disabled = value || !input.value.trim() || !socket.connected;
+}
 
 // Holds reference to the currently-streaming bot bubble (if any)
 let streamingBubble  = null;
@@ -128,7 +138,7 @@ socket.on("connect", () => {
   connLabel.textContent = "Connected";
   statusText.className = "online-text";
   statusText.textContent = "Online — ready to chat";
-  sendBtn.disabled = !input.value.trim();
+  sendBtn.disabled = awaitingResponse || !input.value.trim();
 });
 
 socket.on("disconnect", () => {
@@ -147,6 +157,7 @@ socket.on("online count", (count) => {
 // ── Bot Message (rule-matched, instant) ───────────────────────────────────────
 socket.on("bot message", ({ text, timestamp }) => {
   addMessage({ text, type: "bot", timestamp });
+  setAwaitingResponse(false);
 });
 
 // ── Bot Typing Indicator ──────────────────────────────────────────────────────
@@ -183,6 +194,7 @@ socket.on("bot stream end", ({ timestamp, error }) => {
   } else {
     finalizeStreamingBubble(timestamp);
   }
+  setAwaitingResponse(false);
 });
 
 // ── Incoming Chat Message (from another user) ─────────────────────────────────
@@ -193,12 +205,12 @@ socket.on("chat message", ({ text, sender, timestamp }) => {
 
 // ── Send Message ──────────────────────────────────────────────────────────────
 function sendMessage(text) {
-  if (!text.trim() || !socket.connected) return;
+  if (!text.trim() || !socket.connected || awaitingResponse) return;
   addMessage({ text, type: "user", timestamp: new Date().toISOString() });
   socket.emit("chat message", text);
   input.value = "";
-  sendBtn.disabled = true;
   input.focus();
+  setAwaitingResponse(true);
 }
 
 form.addEventListener("submit", (e) => {
@@ -207,12 +219,20 @@ form.addEventListener("submit", (e) => {
 });
 
 input.addEventListener("input", () => {
-  sendBtn.disabled = !input.value.trim() || !socket.connected;
+  sendBtn.disabled = awaitingResponse || !input.value.trim() || !socket.connected;
 });
 
 // ── Quick Prompt Buttons & Capability Cards ───────────────────────────────────
 document.querySelectorAll(".quick-btn, .cap-btn").forEach((btn) => {
   btn.addEventListener("click", () => sendMessage(btn.getAttribute("data-msg")));
+});
+
+// ── Theme Toggle ──────────────────────────────────────────────────────────────
+themeToggle.addEventListener("click", () => {
+  const current = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+  const next = current === "light" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("mychatbot-theme", next);
 });
 
 // ── Clear Chat ────────────────────────────────────────────────────────────────

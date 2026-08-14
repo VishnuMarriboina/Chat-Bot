@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MyChatBot — Chat Bot</title>
     <link rel="stylesheet" href="css/style.css" />
+    <script>
+      (function () {
+        var saved = localStorage.getItem("mychatbot-theme");
+        var theme = saved === "light" || saved === "dark"
+          ? saved
+          : (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
     <!-- Socket.IO client loaded from backend -->
     <script src="http://localhost:3345/socket.io/socket.io.js"></script>
   </head>
@@ -215,6 +224,14 @@
             </div>
           </div>
           <div class="header-right">
+            <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light/dark theme" title="Toggle theme">
+              <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                <path d="M12 17a5 5 0 100-10 5 5 0 000 10zm0-15a1 1 0 011 1v1.5a1 1 0 11-2 0V3a1 1 0 011-1zm0 17.5a1 1 0 011 1V22a1 1 0 11-2 0v-1.5a1 1 0 011-1zM3.5 11a1 1 0 010 2H2a1 1 0 010-2h1.5zM22 11a1 1 0 010 2h-1.5a1 1 0 010-2H22zM5.64 5.64a1 1 0 011.42 0l1.06 1.06a1 1 0 11-1.42 1.42L5.64 7.06a1 1 0 010-1.42zm10.24 10.24a1 1 0 011.42 0l1.06 1.06a1 1 0 11-1.42 1.42l-1.06-1.06a1 1 0 010-1.42zM5.64 18.36a1 1 0 010-1.42l1.06-1.06a1 1 0 111.42 1.42l-1.06 1.06a1 1 0 01-1.42 0zM15.88 7.12a1 1 0 010-1.42l1.06-1.06a1 1 0 111.42 1.42l-1.06 1.06a1 1 0 01-1.42 0z" />
+              </svg>
+              <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                <path d="M21.64 13a9 9 0 11-10.63-10.6 1 1 0 011.11 1.4A7 7 0 1020.24 11.9a1 1 0 011.4 1.1z" />
+              </svg>
+            </button>
             <div class="connection-badge" id="connection-badge">
               <span class="dot"></span>
               <span id="connection-label">Connecting...</span>
